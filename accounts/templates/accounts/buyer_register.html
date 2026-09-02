@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Create buyer account | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Buyer registration emphasizes shopping features and never exposes role input. -->
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="bg-white border rounded-4 p-4 p-md-5 shadow-sm">
+                <span class="eyebrow text-success">BUYER ACCOUNT</span>
+                <h1 class="h2 fw-bold mt-2">Find products from independent sellers.</h1>
+                <p class="text-secondary">Create your account to manage a cart, pay securely, and follow every order.</p>
+                <form method="post" enctype="multipart/form-data" novalidate class="row g-3 mt-2">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="{% if field.name == 'password1' or field.name == 'password2' %}col-md-6{% else %}col-md-6{% endif %}">
+                            <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+                            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="col-12">
+                        <button class="btn btn-success px-4" type="submit">Create buyer account</button>
+                        <a class="btn btn-link" href="{% url 'accounts:login' %}">I already have an account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

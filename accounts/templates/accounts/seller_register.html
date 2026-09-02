@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Open a seller shop | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Seller registration clearly asks for the business identity shown to buyers. -->
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+            <div class="row g-0 bg-white border rounded-4 overflow-hidden shadow-sm">
+                <div class="col-lg-4 seller-signup-panel text-white p-4 p-md-5">
+                    <span class="eyebrow">SELL ON MARKETBRIDGE</span>
+                    <h1 class="h2 fw-bold mt-3">Your products. Your shop. One clear dashboard.</h1>
+                    <p class="text-white-50 mt-3">Manage inventory, incoming order lines, revenue, and shipment updates from a seller-only workspace.</p>
+                </div>
+                <div class="col-lg-8 p-4 p-md-5">
+                    <h2 class="h3 fw-bold">Create seller account</h2>
+                    <form method="post" enctype="multipart/form-data" novalidate class="row g-3 mt-2">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endfor %}
+                        <div class="col-12">
+                            <button class="btn btn-warning px-4" type="submit">Open my shop</button>
+                            <a class="btn btn-link text-dark" href="{% url 'accounts:login' %}">Sign in instead</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
