@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- The detail page pairs a large product visual with stock-aware purchase controls. -->
+<section class="container py-5">
+    <div class="row g-5 align-items-start">
+        <div class="col-lg-6">
+            {% if product.image %}
+                <img class="img-fluid rounded-4 shadow-sm w-100" src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div class="image-placeholder rounded-4">Photo coming soon</div>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            <a class="small text-success text-decoration-none" href="{% url 'products:product_list' %}?category={{ product.category_id }}">{{ product.category.name }}</a>
+            <h1 class="display-6 fw-bold mt-2">{{ product.name }}</h1>
+            <p class="text-secondary">From <strong class="text-dark">{{ product.seller_display_name }}</strong>{% if product.seller.is_verified %} · Verified seller{% endif %}</p>
+            <div class="h2 fw-bold my-4">₹{{ product.price }}</div>
+            <div class="lh-lg">{{ product.description|linebreaks }}</div>
+            <div class="border-top pt-4 mt-4">
+                {% if product.is_in_stock %}
+                    <p class="text-success fw-semibold">In stock · {{ product.stock }} available</p>
+                    {% if user.is_authenticated and user.role == 'buyer' %}
+                        <form action="{% url 'orders:add_to_cart' product.id %}" method="post" class="row g-2 align-items-end">
+                            {% csrf_token %}
+                            <div class="col-auto"><label class="form-label small fw-semibold" for="quantity">Quantity</label><input class="form-control" id="quantity" name="quantity" type="number" value="1" min="1" max="{{ product.stock }}" required></div>
+                            <div class="col-auto"><button class="btn btn-success px-4" type="submit">Add to cart</button></div>
+                        </form>
+                    {% elif user.is_authenticated %}
+                        <p class="text-secondary mb-0">Switch to a buyer account to purchase products.</p>
+                    {% else %}
+                        <a class="btn btn-success" href="{% url 'accounts:login' %}?next={{ request.path }}">Sign in to add to cart</a>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-secondary">This product is currently out of stock.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

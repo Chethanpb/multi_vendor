@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_home %}Independent products, one trusted checkout{% else %}Browse products{% endif %} | MarketBridge{% endblock %}
+
+{% block content %}
+{% if is_home %}
+<!-- The home hero explains the mediator model without looking like a stock template. -->
+<section class="container py-5">
+    <div class="row align-items-center g-4 py-lg-4">
+        <div class="col-lg-7">
+            <span class="eyebrow text-success">INDEPENDENT SHOPS · ONE MARKETPLACE</span>
+            <h1 class="display-4 fw-bold mt-3">Good products deserve a clear path from seller to buyer.</h1>
+            <p class="lead text-secondary mt-3">Discover seller-owned inventory, pay through a secure checkout, and track fulfillment from one account.</p>
+        </div>
+        <div class="col-lg-4 ms-auto">
+            <div class="bg-success text-white rounded-4 p-4 p-lg-5">
+                <div class="h2 fw-bold">Sell here?</div>
+                <p class="text-white-50">Open a shop, control stock, and manage the order lines that belong to you.</p>
+                <a class="btn btn-light" href="{% url 'accounts:seller_register' %}">Start selling</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- The same validated form supports search, category, and price filtering. -->
+<section class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <span class="eyebrow text-success">CATALOG</span>
+            <h2 class="h3 fw-bold mt-1 mb-0">Browse active products</h2>
+        </div>
+        <span class="text-secondary">{{ page.paginator.count }} product{{ page.paginator.count|pluralize }}</span>
+    </div>
+    <form method="get" class="bg-white border rounded-4 p-3 mb-4">
+        {% if filter_form.non_field_errors %}<div class="alert alert-danger">{{ filter_form.non_field_errors }}</div>{% endif %}
+        <div class="row g-2 align-items-end">
+            <div class="col-lg-4"><label class="form-label small fw-semibold">Search</label>{{ filter_form.query }}</div>
+            <div class="col-lg-3"><label class="form-label small fw-semibold">Category</label>{{ filter_form.category }}</div>
+            <div class="col-6 col-lg-2"><label class="form-label small fw-semibold">Minimum price</label>{{ filter_form.min_price }}</div>
+            <div class="col-6 col-lg-2"><label class="form-label small fw-semibold">Maximum price</label>{{ filter_form.max_price }}</div>
+            <div class="col-lg-1"><button class="btn btn-success w-100" type="submit">Go</button></div>
+        </div>
+        {% for field in filter_form %}{% for error in field.errors %}<div class="text-danger small mt-2">{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+    </form>
+
+    <!-- Product cards show only decision-relevant details and link to full content. -->
+    <div class="row g-4">
+        {% for product in page %}
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+                <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                    {% if product.image %}
+                        <img class="product-image" src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="image-placeholder">Photo coming soon</div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="small text-success fw-semibold">{{ product.category.name }}</div>
+                        <h3 class="h5 fw-bold mt-2">{{ product.name }}</h3>
+                        <p class="text-secondary small mb-3">Sold by {{ product.seller_display_name }}</p>
+                        <div class="mt-auto d-flex justify-content-between align-items-center gap-2">
+                            <span class="h5 fw-bold mb-0">₹{{ product.price }}</span>
+                            <a class="btn btn-outline-success btn-sm" href="{{ product.get_absolute_url }}">View product</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12"><div class="bg-white border rounded-4 p-5 text-center"><h3 class="h5">No matching products</h3><p class="text-secondary mb-0">Try widening the category, search, or price range.</p></div></div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination retains the validated filters in every page link. -->
+    {% if page.has_other_pages %}
+        <nav class="mt-5" aria-label="Product pages">
+            <ul class="pagination justify-content-center">
+                {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">Previous</a></li>{% endif %}
+                <li class="page-item active"><span class="page-link">{{ page.number }} of {{ page.paginator.num_pages }}</span></li>
+                {% if page.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">Next</a></li>{% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "seller/base_seller.html" %}
+
+{% block title %}Seller overview | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Metrics summarize only the signed-in seller's products and paid order lines. -->
+<header class="d-flex flex-wrap justify-content-between align-items-center gap-3 py-4">
+    <div><span class="eyebrow text-primary">STORE OVERVIEW</span><h1 class="h2 fw-bold mt-1 mb-0">Good to see you, {{ user.first_name|default:user.username }}.</h1></div>
+    <a class="btn btn-warning" href="{% url 'products:seller_product_create' %}">Add product</a>
+</header>
+<section class="row g-3">
+    <div class="col-sm-6 col-xl-3"><div class="metric-card bg-white p-4 h-100"><div class="text-secondary small">All products</div><div class="display-6 fw-bold mt-2">{{ product_count }}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric-card bg-white p-4 h-100"><div class="text-secondary small">Active products</div><div class="display-6 fw-bold mt-2">{{ active_product_count }}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric-card bg-white p-4 h-100"><div class="text-secondary small">Paid orders</div><div class="display-6 fw-bold mt-2">{{ sales_summary.total_orders }}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric-card bg-white p-4 h-100"><div class="text-secondary small">Sales revenue</div><div class="h2 fw-bold mt-3">₹{{ sales_summary.total_revenue|floatformat:2 }}</div></div></div>
+</section>
+
+<!-- Recent order lines focus on products this seller must fulfill. -->
+<section class="bg-white metric-card mt-4 overflow-hidden">
+    <div class="p-4 border-bottom d-flex justify-content-between align-items-center"><div><h2 class="h5 fw-bold mb-1">Recent paid order lines</h2><span class="text-secondary small">{{ sales_summary.total_units }} total unit{{ sales_summary.total_units|pluralize }} sold · {{ low_stock_count }} low-stock listing{{ low_stock_count|pluralize }}</span></div><a href="{% url 'orders:seller_order_list' %}">View all</a></div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th class="ps-4">Order</th><th>Product</th><th>Buyer</th><th>Quantity</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for item in recent_order_items %}<tr><td class="ps-4">#{{ item.order_id }}</td><td>{{ item.product.name }}</td><td>{{ item.order.buyer.username }}</td><td>{{ item.quantity }}</td><td><span class="badge text-bg-light">{{ item.order.get_status_display }}</span></td></tr>
+                {% empty %}<tr><td colspan="5" class="text-center text-secondary py-5">Paid order lines will appear here.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

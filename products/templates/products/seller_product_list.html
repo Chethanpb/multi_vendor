@@ -1,0 +1,35 @@
+{% extends "seller/base_seller.html" %}
+
+{% block title %}My products | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Inventory actions are POST-only where they change or delete product state. -->
+<header class="d-flex flex-wrap justify-content-between align-items-center gap-3 py-4">
+    <div><span class="eyebrow text-primary">INVENTORY</span><h1 class="h2 fw-bold mt-1 mb-0">Your products</h1></div>
+    <a class="btn btn-warning" href="{% url 'products:seller_product_create' %}">Add product</a>
+</header>
+<section class="bg-white metric-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th class="ps-4">Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th class="text-end pe-4">Actions</th></tr></thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td class="ps-4"><div class="d-flex align-items-center gap-3">{% if product.image %}<img src="{{ product.image.url }}" alt="" width="54" height="54" class="rounded object-fit-cover">{% endif %}<strong>{{ product.name }}</strong></div></td>
+                        <td>{{ product.category.name }}</td><td>₹{{ product.price }}</td><td>{{ product.stock }}</td>
+                        <td>{% if product.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+                        <td class="text-end pe-4">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'products:seller_product_update' product.id %}">Edit</a>
+                            {% if product.is_active %}
+                                <form method="post" action="{% url 'products:seller_product_delete' product.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form>
+                            {% else %}
+                                <form method="post" action="{% url 'products:seller_product_reactivate' product.id %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success" type="submit">Reactivate</button></form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}<tr><td colspan="6" class="text-center text-secondary py-5">Your first product can be added in a few minutes.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
