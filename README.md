@@ -13,6 +13,7 @@ MarketBridge is a Django marketplace where buyers browse products and sellers ma
 - Seller product creation, editing, deletion, and reactivation
 - SQLite database for local development
 - Bootstrap-based server-rendered templates
+- orders models and forms created 
 
 ## Project Structure
 
@@ -20,6 +21,7 @@ MarketBridge is a Django marketplace where buyers browse products and sellers ma
 multi_vendor/
 ├── accounts/                 Custom users, registration, login, and roles
 ├── products/                 Categories, products, catalog, and seller inventory
+├── orders/                   models ,forms,url
 ├── templates/                Shared buyer and seller templates
 ├── multi_vendor/             Django settings and URL configuration
 ├── manage.py                 Django management entry point
@@ -97,7 +99,7 @@ py -3.13 manage.py migrate
 
 ## Current Limitation
 
-The repository does not yet contain the `orders`, `tracking`, or custom `adminpanel` Django applications referenced by some templates and tests. The seller dashboard therefore displays zero order metrics when the `orders` app is unavailable, while catalog and seller inventory pages remain usable.
+The repository does not yet contain the  `tracking`, or custom `adminpanel` Django applications referenced by some templates and tests. The seller dashboard therefore displays zero order metrics when the `orders` app is incomplete, while catalog and seller inventory pages remain usable.
 
 Implementing checkout, carts, order history, shipment tracking, and the custom admin dashboard requires adding those applications and registering their URL namespaces.
 
