@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Order history | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Buyer history includes pending and failed attempts for complete transparency. -->
+<section class="container py-5">
+    <span class="eyebrow text-success">YOUR PURCHASES</span><h1 class="h2 fw-bold mt-1 mb-4">Order history</h1>
+    <div class="d-grid gap-3">
+        {% for order in orders %}
+            <article class="bg-white border rounded-4 p-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-3"><div class="small text-secondary">ORDER</div><a class="h5 fw-bold text-dark" href="{% url 'orders:buyer_order_detail' order.id %}">#{{ order.id }}</a></div>
+                    <div class="col-md-3"><div class="small text-secondary">PLACED</div><div>{{ order.created_at|date:"d M Y, g:i A" }}</div></div>
+                    <div class="col-md-2"><div class="small text-secondary">TOTAL</div><strong>₹{{ order.total_amount }}</strong></div>
+                    <div class="col-md-2"><span class="badge {% if order.status == 'delivered' %}text-bg-success{% elif order.status == 'cancelled' or order.status == 'payment_failed' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">{{ order.get_status_display }}</span></div>
+                    <div class="col-md-2 text-md-end"><a class="btn btn-sm btn-outline-success" href="{% url 'orders:buyer_order_detail' order.id %}">Details</a>{% if order.status != 'pending_payment' and order.status != 'payment_failed' and order.status != 'cancelled' %}<a class="btn btn-sm btn-success mt-1 mt-xl-0" href="{% url 'tracking:track_order' order.id %}">Track</a>{% endif %}</div>
+                </div>
+            </article>
+        {% empty %}<div class="bg-white border rounded-4 p-5 text-center"><h2 class="h5">No orders yet</h2><p class="text-secondary">Your completed and attempted checkouts will appear here.</p><a class="btn btn-success" href="{% url 'products:product_list' %}">Start shopping</a></div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

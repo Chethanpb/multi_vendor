@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Your cart | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Cart totals use live prices; immutable snapshots are created only at checkout. -->
+<section class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div><span class="eyebrow text-success">YOUR CART</span><h1 class="h2 fw-bold mt-1 mb-0">Review your selections</h1></div>
+        <a class="text-success" href="{% url 'products:product_list' %}">Continue shopping</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="bg-white border rounded-4 overflow-hidden">
+                {% for item in cart_items %}
+                    <div class="p-4 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="row align-items-center g-3">
+                            <div class="col-3 col-md-2">{% if item.product.image %}<img class="img-fluid rounded-3" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<div class="image-placeholder rounded-3 small">No photo</div>{% endif %}</div>
+                            <div class="col-9 col-md-4"><h2 class="h6 fw-bold mb-1"><a class="text-dark text-decoration-none" href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></h2><div class="small text-secondary">{{ item.product.seller_display_name }} · ₹{{ item.product.price }} each</div></div>
+                            <div class="col-7 col-md-3"><form method="post" action="{% url 'orders:update_cart_item' item.id %}" class="d-flex gap-2">{% csrf_token %}<input class="form-control form-control-sm" type="number" name="quantity" min="1" max="{{ item.product.stock }}" value="{{ item.quantity }}" aria-label="Quantity"><button class="btn btn-sm btn-outline-success" type="submit">Update</button></form></div>
+                            <div class="col-3 col-md-2 text-end fw-bold">₹{{ item.subtotal }}</div>
+                            <div class="col-2 col-md-1 text-end"><form method="post" action="{% url 'orders:remove_cart_item' item.id %}">{% csrf_token %}<button class="btn btn-sm btn-link text-danger p-0" type="submit">Remove</button></form></div>
+                        </div>
+                    </div>
+                {% empty %}<div class="text-center p-5"><h2 class="h5">Your cart is empty</h2><p class="text-secondary">Products you choose will appear here.</p><a class="btn btn-success" href="{% url 'products:product_list' %}">Browse products</a></div>{% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <aside class="bg-white border rounded-4 p-4 sticky-lg-top" style="top: 6rem;">
+                <h2 class="h5 fw-bold">Order summary</h2>
+                <div class="d-flex justify-content-between text-secondary mt-4"><span>{{ cart.total_quantity }} item{{ cart.total_quantity|pluralize }}</span><span>₹{{ cart.total_amount }}</span></div>
+                <div class="d-flex justify-content-between border-top pt-3 mt-3 h5 fw-bold"><span>Total</span><span>₹{{ cart.total_amount }}</span></div>
+                {% if cart_items %}<a class="btn btn-success w-100 py-2 mt-3" href="{% url 'orders:checkout_review' %}">Review checkout</a>{% endif %}
+                <p class="small text-secondary mt-3 mb-0">Stock and price are checked again before Stripe Checkout opens.</p>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
