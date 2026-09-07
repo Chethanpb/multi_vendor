@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.id }} | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- This page uses immutable order snapshots, never today's catalog prices. -->
+<section class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4"><div><a class="small text-success" href="{% url 'orders:buyer_order_list' %}">← All orders</a><h1 class="h2 fw-bold mt-2">Order #{{ order.id }}</h1><p class="text-secondary mb-0">Placed {{ order.created_at|date:"d M Y, g:i A" }}</p></div><div class="text-end"><span class="badge text-bg-warning">{{ order.get_status_display }}</span>{% if order.status != 'pending_payment' and order.status != 'payment_failed' and order.status != 'cancelled' %}<div class="mt-2"><a class="btn btn-success" href="{% url 'tracking:track_order' order.id %}">Track this order</a></div>{% endif %}</div></div>
+    <div class="row g-4">
+        <div class="col-lg-8"><div class="bg-white border rounded-4 overflow-hidden">{% for item in order.items.all %}<div class="d-flex justify-content-between gap-3 p-4 {% if not forloop.last %}border-bottom{% endif %}"><div><strong>{{ item.product.name }}</strong><div class="small text-secondary">Sold by {{ item.seller.shop_name|default:item.seller.username }} · {{ item.quantity }} × ₹{{ item.price_at_purchase }}</div></div><strong>₹{{ item.line_total }}</strong></div>{% endfor %}</div></div>
+        <div class="col-lg-4"><aside class="bg-white border rounded-4 p-4"><h2 class="h5 fw-bold">Payment summary</h2><div class="d-flex justify-content-between mt-4"><span>Total</span><strong>₹{{ order.total_amount }}</strong></div><div class="d-flex justify-content-between mt-3"><span>Payment</span><span>{% if order.payment %}{{ order.payment.get_status_display }}{% else %}Not started{% endif %}</span></div></aside></div>
+    </div>
+</section>
+{% endblock %}

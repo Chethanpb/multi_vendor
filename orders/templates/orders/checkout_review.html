@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout review | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Checkout review is read-only; a CSRF-protected POST performs reservation. -->
+<section class="container py-5">
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-7">
+            <span class="eyebrow text-success">SECURE CHECKOUT</span><h1 class="h2 fw-bold mt-1">Final review</h1>
+            {% if checkout_errors %}<div class="alert alert-danger mt-4"><strong>Please update your cart:</strong><ul class="mb-0 mt-2">{% for error in checkout_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+            <div class="bg-white border rounded-4 overflow-hidden mt-4">
+                {% for item in cart_items %}<div class="d-flex justify-content-between gap-3 p-4 {% if not forloop.last %}border-bottom{% endif %}"><div><strong>{{ item.product.name }}</strong><div class="small text-secondary">{{ item.quantity }} × ₹{{ item.product.price }} · {{ item.product.seller_display_name }}</div></div><strong>₹{{ item.subtotal }}</strong></div>{% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <aside class="bg-dark text-white rounded-4 p-4">
+                <div class="small text-white-50">TOTAL TO PAY</div><div class="display-6 fw-bold mt-2">₹{{ cart.total_amount }}</div>
+                <p class="small text-white-50 mt-3">You will continue to Stripe's test checkout. No card data is stored by MarketBridge.</p>
+                {% if not checkout_errors %}<form action="{% url 'payments:create_checkout_session' %}" method="post">{% csrf_token %}<button class="btn btn-warning w-100 py-2" type="submit">Pay securely with Stripe</button></form>{% else %}<a class="btn btn-light w-100" href="{% url 'orders:cart_detail' %}">Return to cart</a>{% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

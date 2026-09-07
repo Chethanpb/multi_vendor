@@ -1,0 +1,19 @@
+{% extends "seller/base_seller.html" %}
+
+{% block title %}Incoming orders | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Each row is filtered by seller, so mixed-vendor orders reveal only owned lines. -->
+<header class="py-4"><span class="eyebrow text-primary">FULFILLMENT</span><h1 class="h2 fw-bold mt-1 mb-0">Incoming order lines</h1><p class="text-secondary mt-2 mb-0">Only products from your shop are shown.</p></header>
+<section class="bg-white metric-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th class="ps-4">Order</th><th>Buyer</th><th>Product</th><th>Quantity</th><th>Line value</th><th>Status</th><th class="pe-4">Tracking</th></tr></thead>
+            <tbody>
+                {% for item in order_items %}<tr><td class="ps-4"><strong>#{{ item.order_id }}</strong><div class="small text-secondary">{{ item.order.created_at|date:"d M Y" }}</div></td><td>{{ item.order.buyer.username }}</td><td>{{ item.product.name }}</td><td>{{ item.quantity }}</td><td>₹{{ item.line_total }}</td><td><span class="badge text-bg-light">{{ item.order.get_status_display }}</span></td><td class="pe-4">{% if item.order.status != 'cancelled' %}<a class="btn btn-sm btn-outline-primary" href="{% url 'tracking:seller_update_shipment' item.order_id %}">Update shipment</a>{% else %}<span class="text-secondary small">Cancelled</span>{% endif %}</td></tr>
+                {% empty %}<tr><td colspan="7" class="text-center text-secondary py-5">Paid order lines from your shop will appear here.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
