@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .forms import (
+from .form import (
     BuyerRegistrationForm,
     MarketplaceAuthenticationForm,
     SellerRegistrationForm,

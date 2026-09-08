@@ -93,39 +93,48 @@ def product_detail(request, product_id):
 def seller_dashboard(request):
     """Summarize the signed-in seller's products, orders, and earned revenue."""
 
-    # Local imports avoid making the products model depend on the orders app.
-    from orders.models import Order, OrderItem
-
     seller_products = Product.objects.filter(seller=request.user)
-    # Only paid or fulfilled orders count as real sales on the seller dashboard.
-    sale_statuses = (
-        Order.Status.PAID,
-        Order.Status.PROCESSING,
-        Order.Status.SHIPPED,
-        Order.Status.DELIVERED,
-    )
-    seller_order_items = OrderItem.objects.filter(
-        seller=request.user,
-        order__status__in=sale_statuses,
-    )
-    # Multiplying snapshot price by quantity gives each seller's exact line revenue.
-    line_revenue = ExpressionWrapper(
-        F("quantity") * F("price_at_purchase"),
-        output_field=DecimalField(max_digits=14, decimal_places=2),
-    )
-    sales_summary = seller_order_items.aggregate(
-        total_orders=Count("order_id", distinct=True),
-        total_units=Coalesce(Sum("quantity"), 0),
-        total_revenue=Coalesce(
-            Sum(line_revenue),
-            Decimal("0.00"),
+    try:
+        from orders.models import Order, OrderItem
+    except ModuleNotFoundError as error:
+        if error.name != "orders":
+            raise
+        sales_summary = {
+            "total_orders": 0,
+            "total_units": 0,
+            "total_revenue": Decimal("0.00"),
+        }
+        recent_order_items = []
+        orders_available = False
+    else:
+        # Only paid or fulfilled orders count as real sales on the seller dashboard.
+        sale_statuses = (
+            Order.Status.PAID,
+            Order.Status.PROCESSING,
+            Order.Status.SHIPPED,
+            Order.Status.DELIVERED,
+        )
+        seller_order_items = OrderItem.objects.filter(
+            seller=request.user,
+            order__status__in=sale_statuses,
+        )
+        line_revenue = ExpressionWrapper(
+            F("quantity") * F("price_at_purchase"),
             output_field=DecimalField(max_digits=14, decimal_places=2),
-        ),
-    )
-    # select_related avoids repeated database queries for recent buyer/order details.
-    recent_order_items = seller_order_items.select_related(
-        "order", "order__buyer", "product"
-    ).order_by("-order__created_at")[:6]
+        )
+        sales_summary = seller_order_items.aggregate(
+            total_orders=Count("order_id", distinct=True),
+            total_units=Coalesce(Sum("quantity"), 0),
+            total_revenue=Coalesce(
+                Sum(line_revenue),
+                Decimal("0.00"),
+                output_field=DecimalField(max_digits=14, decimal_places=2),
+            ),
+        )
+        recent_order_items = seller_order_items.select_related(
+            "order", "order__buyer", "product"
+        ).order_by("-order__created_at")[:6]
+        orders_available = True
 
     context = {
         "product_count": seller_products.count(),
@@ -133,6 +142,7 @@ def seller_dashboard(request):
         "low_stock_count": seller_products.filter(is_active=True, stock__lte=5).count(),
         "sales_summary": sales_summary,
         "recent_order_items": recent_order_items,
+        "orders_available": orders_available,
     }
     return render(request, "products/seller_dashboard.html", context)
 

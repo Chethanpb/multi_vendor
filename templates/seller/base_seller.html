@@ -20,7 +20,7 @@
             <nav class="nav flex-column gap-1 mt-5">
                 <a class="nav-link" href="{% url 'products:seller_dashboard' %}">Overview</a>
                 <a class="nav-link" href="{% url 'products:seller_product_list' %}">Products</a>
-                <a class="nav-link" href="{% url 'orders:seller_order_list' %}">Incoming orders</a>
+                {% if orders_available %}<a class="nav-link" href="{% url 'orders:seller_order_list' %}">Incoming orders</a>{% endif %}
             </nav>
             <div class="mt-auto pt-5">
                 <a class="nav-link px-0 text-white-50" href="{% url 'products:home' %}">View storefront</a>
