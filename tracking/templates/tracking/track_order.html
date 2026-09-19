@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Track order #{{ order.id }} | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- The visual timeline is driven entirely by immutable TrackingHistory rows. -->
+<section class="container py-5">
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-7">
+            <a class="small text-success" href="{% url 'tracking:track_lookup' %}">← Track another order</a><h1 class="h2 fw-bold mt-2">Order #{{ order.id }}</h1><p class="text-secondary">Placed {{ order.created_at|date:"d M Y, g:i A" }} · {{ order.item_count }} item{{ order.item_count|pluralize }}</p>
+            {% if shipment %}
+                <div class="bg-white border rounded-4 p-4 p-md-5 mt-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div><span class="small text-secondary">CURRENT STATUS</span><h2 class="h4 fw-bold mt-1">{{ shipment.get_current_status_display }}</h2></div><span class="small text-secondary">Updated {{ shipment.last_updated_at|date:"d M, g:i A" }}</span></div>
+                    {% for milestone in milestones %}<div class="tracking-step {% if milestone.is_complete %}complete{% endif %}"><h3 class="h6 fw-bold mb-1">{{ milestone.label }}</h3>{% if milestone.history %}<div class="small text-secondary">{{ milestone.history.changed_at|date:"d M Y, g:i A" }}{% if milestone.history.changed_by %} · {{ milestone.history.changed_by.shop_name|default:milestone.history.changed_by.username }}{% endif %}</div>{% else %}<div class="small text-secondary">Waiting for seller update</div>{% endif %}</div>{% endfor %}
+                    {% if cancellation_history %}<div class="alert alert-secondary mb-0"><strong>Shipment cancelled</strong><br><span class="small">{{ cancellation_history.changed_at|date:"d M Y, g:i A" }}. Payment refunds are handled separately by marketplace support.</span></div>{% endif %}
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4">Tracking begins automatically after Stripe confirms payment. Current order status: {{ order.get_status_display }}.</div>
+            {% endif %}
+        </div>
+        <div class="col-lg-4"><aside class="bg-white border rounded-4 p-4"><h2 class="h5 fw-bold">Items in this order</h2>{% for item in order.items.all %}<div class="border-top pt-3 mt-3"><strong>{{ item.product.name }}</strong><div class="small text-secondary">{{ item.quantity }} unit{{ item.quantity|pluralize }} · {{ item.seller.shop_name|default:item.seller.username }}</div></div>{% endfor %}</aside></div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "seller/base_seller.html" %}
+
+{% block title %}Update order #{{ shipment.order_id }} | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- The dropdown contains only legal forward/cancel transitions from current state. -->
+<header class="py-4"><a class="small" href="{% url 'orders:seller_order_list' %}">← Incoming orders</a><h1 class="h2 fw-bold mt-2 mb-0">Update order #{{ shipment.order_id }}</h1><p class="text-secondary mt-2 mb-0">Current status: <strong>{{ shipment.get_current_status_display }}</strong></p></header>
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="bg-white metric-card p-4 p-lg-5">
+            {% if has_next_status %}<h2 class="h5 fw-bold">Choose the next milestone</h2><p class="text-secondary small">Updates are manual, timestamped, and immediately visible to the buyer.</p><form method="post" novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<label class="form-label fw-semibold" for="{{ form.current_status.id_for_label }}">New status</label>{{ form.current_status }}{% for error in form.current_status.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}<button class="btn btn-warning mt-4" type="submit">Save tracking update</button></form><div class="alert alert-warning small mt-4 mb-0">Cancelling tracking does not automatically issue a Stripe refund. Contact an administrator for payment resolution.</div>{% else %}<h2 class="h5 fw-bold">This shipment is complete</h2><p class="text-secondary mb-0">Delivered and cancelled shipments are terminal and cannot be changed by sellers.</p>{% endif %}
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <section class="bg-white metric-card p-4"><h2 class="h5 fw-bold mb-4">Status history</h2>{% for entry in history_entries %}<div class="border-start border-3 ps-3 pb-4"><strong>{{ entry.get_status_display }}</strong><div class="small text-secondary">{{ entry.changed_at|date:"d M Y, g:i A" }}{% if entry.changed_by %} · {{ entry.changed_by.shop_name|default:entry.changed_by.username }}{% else %} · Payment system{% endif %}</div>{% if entry.note %}<div class="small mt-1">{{ entry.note }}</div>{% endif %}</div>{% endfor %}</section>
+    </div>
+</div>
+{% endblock %}

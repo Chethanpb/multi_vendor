@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Track an order | MarketBridge{% endblock %}
+
+{% block content %}
+<!-- Ownership-aware tracking lookup never reveals whether another buyer's ID exists. -->
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="bg-success text-white rounded-4 p-4 p-md-5">
+                <span class="eyebrow text-warning">MANUAL SELLER UPDATES</span><h1 class="display-6 fw-bold mt-2">Track your package by order ID.</h1><p class="text-white-50">Your seller moves the package through Packed, Shipped, Out for Delivery, and Delivered. Each change keeps its timestamp.</p>
+                <form method="post" class="row g-2 mt-3" novalidate>{% csrf_token %}<div class="col-md-8">{{ form.order_id }}{% for error in form.order_id.errors %}<div class="text-warning small mt-2">{{ error }}</div>{% endfor %}</div><div class="col-md-4"><button class="btn btn-warning btn-lg w-100" type="submit">Track order</button></div></form>
+            </div>
+            <p class="text-secondary small mt-3">Find your order ID in <a href="{% url 'orders:buyer_order_list' %}">order history</a>. Tracking is private to the buyer account that placed the order.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
