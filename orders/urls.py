@@ -1,8 +1,3 @@
-from django.urls import path
-from . import views
-urlpatterns = [
-    path()
-]
 """Name cart, checkout, buyer order, and seller fulfillment routes."""
 
 from django.urls import path

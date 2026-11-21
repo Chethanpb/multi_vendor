@@ -19,8 +19,6 @@ class CartQuantityForm(forms.Form):
         self.product = product
         # Django creates the declared quantity field during parent initialization.
         super().__init__(*args, **kwargs)
-        # max_value performs server validation; the HTML max improves usability only.
-        self.fields["quantity"].max_value = product.stock
         self.fields["quantity"].widget.attrs["max"] = str(product.stock)
 
     def clean_quantity(self):
@@ -31,5 +29,10 @@ class CartQuantityForm(forms.Form):
         if not self.product.is_active:
             # Moderated or seller-deactivated inventory cannot be newly purchased.
             raise forms.ValidationError("This product is no longer available.")
+
+        if quantity > self.product.stock:
+            raise forms.ValidationError(
+                f"Only {self.product.stock} unit(s) are available."
+            )
 
         return quantity

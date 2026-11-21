@@ -13,7 +13,8 @@ MarketBridge is a Django marketplace where buyers browse products and sellers ma
 - Seller product creation, editing, deletion, and reactivation
 - SQLite database for local development
 - Bootstrap-based server-rendered templates
-- orders models and forms created 
+- Buyer cart and checkout review
+- Buyer order history and seller incoming order lines
 
 ## Project Structure
 
@@ -21,7 +22,7 @@ MarketBridge is a Django marketplace where buyers browse products and sellers ma
 multi_vendor/
 ├── accounts/                 Custom users, registration, login, and roles
 ├── products/                 Categories, products, catalog, and seller inventory
-├── orders/                   models ,forms,url
+├── orders/                   Cart, checkout review, and order history
 ├── templates/                Shared buyer and seller templates
 ├── multi_vendor/             Django settings and URL configuration
 ├── manage.py                 Django management entry point
@@ -39,8 +40,7 @@ multi_vendor/
 From the project root:
 
 ```powershell
-py -3.13 -m pip install Django Pillow
-py -3.13 manage.py makemigrations accounts products
+py -3.13 -m pip install Django==6.1.1 Pillow==12.3.0
 py -3.13 manage.py migrate
 py -3.13 manage.py check
 ```
@@ -67,6 +67,11 @@ Open <http://127.0.0.1:8000/> in a browser.
 | `/seller/dashboard/` | Seller dashboard |
 | `/seller/products/` | Seller inventory |
 | `/seller/products/add/` | Add a product |
+| `/cart/` | Buyer cart |
+| `/checkout/` | Buyer checkout review |
+| `/orders/` | Buyer order history |
+| `/seller/orders/` | Seller incoming orders |
+| `/admin/` | Django admin |
 
 ## User Roles
 
@@ -97,11 +102,9 @@ py -3.13 manage.py makemigrations
 py -3.13 manage.py migrate
 ```
 
-## Current Limitation
+## Feature Availability
 
-The repository does not yet contain the  `tracking`, or custom `adminpanel` Django applications referenced by some templates and tests. The seller dashboard therefore displays zero order metrics when the `orders` app is incomplete, while catalog and seller inventory pages remain usable.
-
-Implementing checkout, carts, order history, shipment tracking, and the custom admin dashboard requires adding those applications and registering their URL namespaces.
+Checkout review shows the cart total and checks stock. Online payments and shipment tracking require their respective apps. Marketplace administrators use Django admin.
 
 ## Development Checks
 
@@ -109,6 +112,7 @@ Run the system checks before committing changes:
 
 ```powershell
 py -3.13 manage.py check
+py -3.13 manage.py test
 ```
 
 The local development server is for development only and should not be used as a production server.
