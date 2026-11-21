@@ -23,7 +23,8 @@
                 {% if user.is_authenticated and user.role == 'buyer' %}
                     <a class="nav-link" href="{% url 'orders:cart_detail' %}">Cart <span class="badge text-bg-success">{{ cart_item_count }}</span></a>
                     <a class="nav-link" href="{% url 'orders:buyer_order_list' %}">Orders</a>
-                    <a class="nav-link" href="{% url 'tracking:track_lookup' %}">Track</a>
+                    {% url 'tracking:track_lookup' as track_lookup_url %}
+                    {% if track_lookup_url %}<a class="nav-link" href="{{ track_lookup_url }}">Track</a>{% endif %}
                 {% endif %}
                 {% if user.is_authenticated %}
                     <a class="btn btn-outline-dark btn-sm" href="{% url 'accounts:role_redirect' %}">My dashboard</a>

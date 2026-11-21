@@ -5,11 +5,13 @@ from decimal import Decimal
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
+from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.decorators import seller_required
+from orders.models import Order, OrderItem
 
 from .forms import ProductFilterForm, ProductForm
 from .models import Product
@@ -94,47 +96,33 @@ def seller_dashboard(request):
     """Summarize the signed-in seller's products, orders, and earned revenue."""
 
     seller_products = Product.objects.filter(seller=request.user)
-    try:
-        from orders.models import Order, OrderItem
-    except ModuleNotFoundError as error:
-        if error.name != "orders":
-            raise
-        sales_summary = {
-            "total_orders": 0,
-            "total_units": 0,
-            "total_revenue": Decimal("0.00"),
-        }
-        recent_order_items = []
-        orders_available = False
-    else:
-        # Only paid or fulfilled orders count as real sales on the seller dashboard.
-        sale_statuses = (
-            Order.Status.PAID,
-            Order.Status.PROCESSING,
-            Order.Status.SHIPPED,
-            Order.Status.DELIVERED,
-        )
-        seller_order_items = OrderItem.objects.filter(
-            seller=request.user,
-            order__status__in=sale_statuses,
-        )
-        line_revenue = ExpressionWrapper(
-            F("quantity") * F("price_at_purchase"),
+    # Only paid or fulfilled orders count as real sales on the seller dashboard.
+    sale_statuses = (
+        Order.Status.PAID,
+        Order.Status.PROCESSING,
+        Order.Status.SHIPPED,
+        Order.Status.DELIVERED,
+    )
+    seller_order_items = OrderItem.objects.filter(
+        seller=request.user,
+        order__status__in=sale_statuses,
+    )
+    line_revenue = ExpressionWrapper(
+        F("quantity") * F("price_at_purchase"),
+        output_field=DecimalField(max_digits=14, decimal_places=2),
+    )
+    sales_summary = seller_order_items.aggregate(
+        total_orders=Count("order_id", distinct=True),
+        total_units=Coalesce(Sum("quantity"), 0),
+        total_revenue=Coalesce(
+            Sum(line_revenue),
+            Decimal("0.00"),
             output_field=DecimalField(max_digits=14, decimal_places=2),
-        )
-        sales_summary = seller_order_items.aggregate(
-            total_orders=Count("order_id", distinct=True),
-            total_units=Coalesce(Sum("quantity"), 0),
-            total_revenue=Coalesce(
-                Sum(line_revenue),
-                Decimal("0.00"),
-                output_field=DecimalField(max_digits=14, decimal_places=2),
-            ),
-        )
-        recent_order_items = seller_order_items.select_related(
-            "order", "order__buyer", "product"
-        ).order_by("-order__created_at")[:6]
-        orders_available = True
+        ),
+    )
+    recent_order_items = seller_order_items.select_related(
+        "order", "order__buyer", "product"
+    ).order_by("-order__created_at")[:6]
 
     context = {
         "product_count": seller_products.count(),
@@ -142,7 +130,6 @@ def seller_dashboard(request):
         "low_stock_count": seller_products.filter(is_active=True, stock__lte=5).count(),
         "sales_summary": sales_summary,
         "recent_order_items": recent_order_items,
-        "orders_available": orders_available,
     }
     return render(request, "products/seller_dashboard.html", context)
 
@@ -217,14 +204,10 @@ def seller_product_delete(request, product_id):
     product = get_object_or_404(Product, pk=product_id, seller=request.user)
     product_name = product.name
 
-    product_has_references = (
-        product.order_items.exists()
-        or product.cart_items.exists()
-        or product.removal_logs.exists()
-    )
-
-    if product_has_references:
-        # Orders and buyer carts need the row, so use safe soft deletion instead.
+    try:
+        product.delete()
+    except ProtectedError:
+        # Keep products that are referenced by orders, carts, or moderation records.
         product.is_active = False
         product.save(update_fields=("is_active", "updated_at"))
         messages.success(
@@ -232,8 +215,6 @@ def seller_product_delete(request, product_id):
             f"{product_name} was deactivated because another record references it.",
         )
     else:
-        # An unused product has no financial history and can be removed permanently.
-        product.delete()
         messages.success(request, f"{product_name} was deleted.")
 
     return redirect("products:seller_product_list")
@@ -247,7 +228,8 @@ def seller_product_reactivate(request, product_id):
     # Ownership remains part of the database lookup for every state-changing action.
     product = get_object_or_404(Product, pk=product_id, seller=request.user)
 
-    if product.removal_logs.exists():
+    removal_logs = getattr(product, "removal_logs", None)
+    if removal_logs is not None and removal_logs.exists():
         # A seller cannot override an administrator's recorded moderation decision.
         messages.error(
             request,

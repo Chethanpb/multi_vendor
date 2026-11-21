@@ -139,8 +139,7 @@ def role_redirect(request):
         return redirect("products:seller_dashboard")
 
     if request.user.role == User.Role.ADMIN:
-        # Marketplace admins land on global analytics and moderation controls.
-        return redirect("adminpanel:dashboard")
+        return redirect("admin:index")
 
     # Buyer is the safe default for normal customer accounts.
     return redirect("products:home")
